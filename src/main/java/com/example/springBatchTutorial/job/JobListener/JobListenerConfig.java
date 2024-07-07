@@ -1,4 +1,4 @@
-package com.example.springBatchTutorial.job.ValidatedParam;
+package com.example.springBatchTutorial.job.JobListener;
 
 import com.example.springBatchTutorial.job.ValidatedParam.validator.FileParamValicator;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +23,12 @@ import java.util.Arrays;
 
 
 /**
- * desc: 파일 이름 파라미터 전달 그리고 검증
- * run: --spring.batch.job.names=validatedParamJob -fileName=test.csv
+ *
+ * run: --spring.batch.job.names=jobListenerJob
  */
 @Configuration
 @RequiredArgsConstructor
-public class ValidatedParamJobConfig {
+public class JobListenerConfig {
 
     @Autowired
     private JobBuilderFactory jobBuilderFactory;
@@ -37,39 +37,33 @@ public class ValidatedParamJobConfig {
     private StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public Job validatedParamJob(Step validatedParamStep){
-        return jobBuilderFactory.get("validatedParamJob")
+    public Job jobListenerJob(Step jobListenerStep){
+        return jobBuilderFactory.get("jobListenerJob")
                 .incrementer(new RunIdIncrementer())
-//                .validator(new FileParamValicator())
-                .validator(multiValidator())
-                .start(validatedParamStep)
+                .listener(new JobLoggerListener())
+                .start(jobListenerStep)
                 .build();
     }
 
-    private CompositeJobParametersValidator multiValidator(){
-        CompositeJobParametersValidator validator = new CompositeJobParametersValidator();
-        validator.setValidators(Arrays.asList(new FileParamValicator()));
-
-        return validator;
-    }
     @JobScope
     @Bean
-    public Step validatedParamStep(Tasklet validatedParamTasklet){
-        return stepBuilderFactory.get("validatedParamStep")
-                .tasklet(validatedParamTasklet)
+    public Step jobListenerStep(Tasklet jobListenerTasklet){
+        return stepBuilderFactory.get("jobListenerStep")
+                .tasklet(jobListenerTasklet)
                 .build();
 
     }
 
     @StepScope
     @Bean
-    public Tasklet validatedParamTasklet(@Value("#{jobParameters['fileName']}") String fileName){
+    public Tasklet jobListenerTasklet(){
         return new Tasklet() {
             @Override
             public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-//                System.out.println(fileName);
-                System.out.println("validatedParam Tasklet ");
+
+                System.out.println("jobListener Tasklet ");
                 return RepeatStatus.FINISHED;
+//                throw new Exception("Failed!!");
             }
         };
     }
